@@ -2,3 +2,4 @@ netlib
 configargparse 
 pillow 
 mitmproxy
+pymongo

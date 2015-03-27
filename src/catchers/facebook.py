@@ -4,9 +4,9 @@ from base import *
 
 class Facebook(Catcher):
     def __init__(self):
-        host = r"facebook\.com"
+        hosts = [r"facebook\.com"]
         paths = [ r"^/login", r"^/pull", r"ajax/mercury"]
-        super(Facebook, self).__init__(host, *paths )
+        super(Facebook, self).__init__(hosts, paths)
 
     @catcher
     def a_message_batch(self, flow):
@@ -22,7 +22,8 @@ class Facebook(Catcher):
             in_chat = []
             for p in xrange(0,99):
                 recipient = data.val(i, 'specific_to_list', p)
-                if recipient is None: break
+                if recipient is None: 
+                    break
                 in_chat.append(recipient)
 
             fact = {'kind': 'message',
@@ -32,7 +33,7 @@ class Facebook(Catcher):
                     'to': map(clean_fbid, in_chat),
                     'time': int(data.val(i, 'timestamp'))/1000
             }
-            save(fact)
+            self.save(flow, fact)
             saved+=1
         return saved
 
@@ -52,7 +53,7 @@ class Facebook(Catcher):
                     'to_name': m['thread_name'],
                     'id':m['tid'],
                     }
-            save(fact)
+            self.save(flow, fact)
             saved += 1
         return saved
     
@@ -71,7 +72,7 @@ class Facebook(Catcher):
                     'name': p['name'],
                     'gender': p['gender']
                 }
-            save(fact)
+            self.save(flow, fact, selector={'id': fact['id']})
             saved += 1
         return saved
 
@@ -82,11 +83,12 @@ class Facebook(Catcher):
         data = PostData(flow.request)
         fact  = {
             'kind': 'cred',
+            'provider': 'facebook',
             'id': data.val('email'),
             'email': data.val('email'),
             'password': data.val('pass')
         }
         pprint(data.data)
-        save(fact)
+        self.save(flow, fact)
         return 1
 
