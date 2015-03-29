@@ -37,7 +37,7 @@ class Gmail(Catcher):
             envelope = json.loads(content)
         except ValueError:
             print content
-            import pdb; pdb.set_trace()
+            #import pdb; pdb.set_trace()
             return 0
 
         assert len(envelope) == 2
@@ -66,7 +66,8 @@ class Gmail(Catcher):
                     'frm': frm,
                     'to': None,
                     'to_name': adresses,
-                    'content': body
+                    'content': body,
+                    'src': 'tb'
                 }
             print "THREAD", fact
             try:
@@ -87,7 +88,9 @@ class Gmail(Catcher):
             'frm_name': m[5],
             'frm': m[6],
             'content': m[8],
-            'subject': m[12]
+            'subject': m[12],
+            'src': 'ms'
+
             }
         print "MAIL", fact
         self.save(flow, fact, selector={'kind':'mail', 'id': fact['id']})
@@ -97,6 +100,7 @@ class Gmail(Catcher):
         fact['to'] = detail[1]
         fact['subject'] = detail[5]
         fact['content'] = detail[6]
+        fact['src'] = 'detail'
         print "DETAIL", fact
         self.save(flow, fact, selector={'kind':'mail', 'id': fact['id']})
         ctr += 1

@@ -91,6 +91,9 @@ class PostMethod(Catcher):
                         'provider': 'yahoo'
                     }
                 return fact
+        elif req.host == "www.facebook.com":
+            # here we get just some fbids, ignore
+            return None
         else:
             password = None
             username = None
