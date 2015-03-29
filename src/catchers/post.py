@@ -1,30 +1,73 @@
 from base import *
+from bson.errors import InvalidDocument
+import re
 
 class PostMethod(Catcher):
     def __init__(self):
         super(PostMethod, self).__init__(methods=['POST'])
     
+    def get_header(self, req, key):
+        if key in req.headers and req.headers[key]:
+            return req.headers[key][0]
+
     @catcher
     def any_post_data(self, flow):
         q = flow.request
         print "POST {0} {1}".format(q.host, q.path)
-
-        data = self.guess_post_data(q)
-        if data is None:
+        # Don't care about empty body
+        length = self.get_header(q, 'Content-Length')
+        if length is None or int(length) == 0:
             return 0
 
-        # is it login?
-        fact = self.is_login(q, data)
+        # is it upload?
+        fact = self.is_upload(q)
 
-        # try to save the data anyway
+        # is it some form/json data?
         if fact is None:
-            fact = {
-                'kind': 'postdata',
-                'content': data.data,
-            }
+            data = self.guess_post_data(q)
+            if data is not None:
+                fact = self.is_login(q, data)
 
-        self.save(flow, fact)
+                # try to save the data anyway
+                if fact is None:
+                    fact = {
+                        'kind': 'postdata',
+                        'content': data.data,
+                    }
+            else:
+                pass
+                #print "POST unguessable: headers:{0} [[{1}]]".format(q.headers, q.get_decoded_content())
+
+        if fact is None:
+            return 0
+
+        try:
+            self.save(flow, fact)
+        except Exception, err:
+            print "POST document invalid: {0} Headers:{2} [[{1}]]".format(err, q.get_decoded_content(), q.headers)
+            return 0
         return 1
+
+
+    def is_upload(self, req):
+        if not 'Content-Disposition' in req.headers:
+            return None
+        ct = req.headers['Content-Disposition'][0]
+        if not ct.startswith('attachment'):
+            return None
+        
+        filename = None
+        m = re.search(r'filename=["]([^"]+)["]', 'attachment; filename="text.txt"')
+        if m is not None:
+            filename = m.groups()[0]
+
+        fact = {
+            'kind': 'upload',
+            'mime': self.get_header(req, 'Content-Type'),
+            'content': req.get_decoded_content(),
+            'filename': filename
+        }
+        return fact
 
 
     def is_login(self, req, data):

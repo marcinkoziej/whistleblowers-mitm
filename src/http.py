@@ -3,8 +3,9 @@ from catchers import *
 
 catchers = [ \
              Facebook(), Twitter(),\
+             Gmail(),\
              DuckDuckGo(), Google(),\
-             PostMethod()]
+             PostMethod(), ]
 other_catcher = Get()
 
 def response(context, flow):

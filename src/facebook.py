@@ -40,7 +40,6 @@ def print_json(rr):
     
 
 def save(fact):
-    print "FACT!!"
     pprint(fact)
     with open("/tmp/fb.log","a") as out:
         pprint(fact, out)
@@ -140,7 +139,9 @@ def a_thread_sync(flow):
     saved = 0
     data = fb_json(flow.response)
     if data is None: return
+    print "DEB 3", data
     participants = select(data, 'payload', 'participants')
+    print "DEB 4", participants
     if participants is None: return
     for p in participants:
         fact = {'kind': 'user',

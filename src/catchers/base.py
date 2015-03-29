@@ -109,7 +109,7 @@ class Catcher(object):
         fact['method'] = flow.request.method
         
         if selector:
-            fact_id = self.db.facts.upsert(selector, fact)
+            fact_id = self.db.facts.update(selector, fact, upsert=True)
         else:
             fact_id = self.db.facts.insert(fact)
         return fact_id

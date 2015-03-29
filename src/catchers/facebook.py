@@ -44,17 +44,21 @@ class Facebook(Catcher):
         if data is None: return
         msgs = select(data, 'ms', type='m_messaging')
         if msgs is None: return
+#        print "a_ms_pull msgs:", msgs
         for m in msgs:
-            fact = {'kind': 'message',
-                    'content': m['snippet'],
-                    'frm':m['author_fbid'],
-                    'frm_name': m['author_name'],
-                    'to':m['participant_ids'],
-                    'to_name': m['thread_name'],
-                    'id':m['tid'],
-                    }
-            self.save(flow, fact)
-            saved += 1
+            content = m.get('message', None) or m.get('snippet', None)
+            if content:
+                fact = {'kind': 'message',
+                        'content': content,
+                        'frm':m['author_fbid'],
+                        'frm_name': m['author_name'],
+                        'to':m['participant_ids'],
+                        'to_name': m['thread_name'],
+                        'id':m['tid'],
+                }
+                print "LOG", fact
+                self.save(flow, fact)
+                saved += 1
         return saved
     
     @catcher
