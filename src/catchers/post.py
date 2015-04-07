@@ -132,7 +132,8 @@ class Get(Catcher):
         fact = {
             'path': gd.path,
             'query': gd.data,
-            'kind':'get'
+            'query_string': gd.query, 
+            'kind': 'get'
         }
         self.save(flow, fact)
         

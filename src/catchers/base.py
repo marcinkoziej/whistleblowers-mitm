@@ -184,10 +184,6 @@ class JSONData(object):
         return v
 
 
-
-
-
-
 class GetData(object):
     def __init__(self, url):
         (self.scheme, self.netloc, self.path, self.params, self.query, self.anchor) = urllib2.urlparse.urlparse(url)
