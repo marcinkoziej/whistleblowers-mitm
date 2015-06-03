@@ -7,14 +7,16 @@ RUN apt-get install -y --no-install-recommends \
 
 VOLUME /var/lib/mongodb/
 
-RUN echo 'smallfiles=true' >> /etc/mongodb.conf; sed -ibkp 's/bind_ip.*/bind_ip = 0.0.0.0/' /etc/mongodb.conf 
+RUN echo 'smallfiles=true' >> /etc/mongodb.conf; sed -ibkp 's/bind_ip.*/bind_ip = 0.0.0.0/' /etc/mongodb.conf
 
 # move
 RUN apt-get install -y --no-install-recommends libffi-dev libssl-dev
 
 RUN pip install netlib configargparse pillow pymongo mitmproxy ipython
 ENV PYTHONPATH /usr/app/src
+ENV LANG C
 COPY mitmproxy /usr/app/mitmproxy
+COPY start.sh /usr/app/start.sh
 
 EXPOSE 8080 27017
 
