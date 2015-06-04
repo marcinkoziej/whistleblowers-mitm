@@ -2,6 +2,41 @@ import re
 import json
 from catchers.base import *
 
+
+class Cahoots(Catcher):
+    def __init__(self):
+        hosts = [r"mail\.cahoots\.pl"]
+        paths = None
+        methods =["POST"]
+        super(Cahoots, self).__init__(hosts,methods=methods)
+
+    @catcher
+    def mail_cahoots(self, flow):
+
+        q = flow.request
+
+        print q.get_decoded_content()
+        try:
+            data = PostData(q)
+        except ValueError:
+            return 0
+
+        mcontent = data.val("_message")
+        if not mcontent: return 0
+        mto = data.val("_to")
+        msubject = data.val("_subject")
+        fact = {
+            'kind': 'mail',
+            'provider': 'cahoots',
+            'subject': msubject,
+            'to': [mto],
+            'content': mcontent
+        }
+        self.save(flow, fact)
+        return 1
+
+
+
 class Gmail(Catcher):
     def __init__(self):
         hosts = [r"mail\.google\.com"]
@@ -20,8 +55,8 @@ class Gmail(Catcher):
             return None
 
         content = content.replace("\n","")
-        # remove singlequoted  'signature' 
-        content = re.sub(r"'\w+'\]$","0]", content) 
+        # remove singlequoted  'signature'
+        content = re.sub(r"'\w+'\]$","0]", content)
         # fill emptiness with nulls....
         content = re.sub(r",(?=,)", ",null", content)
         return content
@@ -31,7 +66,7 @@ class Gmail(Catcher):
         content = flow.response.get_decoded_content()
 
         content = self.fix_json(content)
-        if content is None: 
+        if content is None:
             return 0
         try:
             envelope = json.loads(content)
@@ -49,7 +84,7 @@ class Gmail(Catcher):
             if m[0] == 'ms':
                 ctr += self.parse_ms(flow, m)
         return ctr
-            
+
     def parse_tb(self, flow, m):
         thread_list = m[2]
         ctr = 0
@@ -95,8 +130,8 @@ class Gmail(Catcher):
         print "MAIL", fact
         self.save(flow, fact, selector={'kind':'mail', 'id': fact['id']})
 
-        ctr += 1        
-        detail = m[13] # 
+        ctr += 1
+        detail = m[13] #
         fact['to'] = detail[1]
         fact['subject'] = detail[5]
         fact['content'] = detail[6]

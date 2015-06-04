@@ -5,7 +5,7 @@ from base import *
 class Facebook(Catcher):
     def __init__(self):
         hosts = [r"facebook\.com"]
-        paths = [ r"^/login", r"^/pull", r"ajax/mercury"]
+        paths = [ r"^/pull", r"ajax/mercury"]
         super(Facebook, self).__init__(hosts, paths)
 
     @catcher
@@ -22,7 +22,7 @@ class Facebook(Catcher):
             in_chat = []
             for p in xrange(0,99):
                 recipient = data.val(i, 'specific_to_list', p)
-                if recipient is None: 
+                if recipient is None:
                     break
                 in_chat.append(recipient)
 
@@ -60,7 +60,7 @@ class Facebook(Catcher):
                 self.save(flow, fact)
                 saved += 1
         return saved
-    
+
     @catcher
     def a_thread_sync(self, flow):
         saved = 0
@@ -80,7 +80,7 @@ class Facebook(Catcher):
             saved += 1
         return saved
 
-    @catcher
+    #@catcher
     def a_password(self,flow):
         if flow.request.method != 'POST': return
         if not flow.request.path.startswith("/login"): return
@@ -95,4 +95,3 @@ class Facebook(Catcher):
         pprint(data.data)
         self.save(flow, fact)
         return 1
-

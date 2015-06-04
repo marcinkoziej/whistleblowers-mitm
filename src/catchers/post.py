@@ -10,6 +10,7 @@ class PostMethod(Catcher):
         if key in req.headers and req.headers[key]:
             return req.headers[key][0]
 
+
     @catcher
     def any_post_data(self, flow):
         q = flow.request

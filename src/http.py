@@ -1,9 +1,9 @@
-from pprint import pprint 
+from pprint import pprint
 from catchers import *
 
 catchers = [ \
              Facebook(), Twitter(),\
-             Gmail(),\
+             Gmail(), Cahoots(),\
              DuckDuckGo(), Google(),\
              PostMethod(), ]
 other_catcher = Get()
