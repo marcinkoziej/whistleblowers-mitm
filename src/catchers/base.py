@@ -22,7 +22,7 @@ class Catcher(object):
 #            for fld in ['email', 'name', 'password', 'content','to_name','frm_name','nick']:
 #                self.db.facts.create_index([(fld, TEXT)], sparse=True)
 
-    @property 
+    @property
     def db(self):
         return Catcher.mongo.whistleblowers
 
@@ -43,6 +43,15 @@ class Catcher(object):
         if con_type and con_type[0].startswith(content_type):
             return True
         return False
+
+    codec_re = re.compile("charset *= *([A-Za-z0-9-]+)")
+    def get_codec(self, req):
+        con_type = req.headers['Content-Type']
+        if con_type:
+            m = self.codec_re.search(con_type[0])
+            if m:
+                return m.groups()[0]
+        return None
 
 
     def guess_post_data(self, req):
@@ -66,7 +75,7 @@ class Catcher(object):
 
     def match(self, flow):
         req = flow.request
-        
+
         def any_matches(pred, elems):
             return reduce(operator.or_, map(lambda x: pred(req, x), elems), False)
 
@@ -100,6 +109,7 @@ class Catcher(object):
         return ctr
 
     def save(self, flow, fact, selector=None):
+        print "Save %s" % fact
         fact['server'] = flow.server_conn.address.host
         fact['client'] = flow.client_conn.address.host
         fact['timestamp_start'] = flow.request.timestamp_start
@@ -107,7 +117,7 @@ class Catcher(object):
         fact['host'] = flow.request.host
         fact['path'] = flow.request.path
         fact['method'] = flow.request.method
-        
+
         if selector:
             fact_id = self.db.facts.update(selector, fact, upsert=True)
         else:
@@ -174,7 +184,7 @@ class JSONData(object):
         self.base_k = base_k
         content = req.get_decoded_content()
         self.data = json.loads(content)
-    
+
     def val(self, *ks):
         v = self.data
         if self.base_k:
@@ -213,7 +223,7 @@ def select(hsh, *path, **cond):
     if isinstance(c, list):
         return filter(lambda x: matches(x, cond), c)
     else:
-        if matches(c, cond): 
+        if matches(c, cond):
             return c
         return None
 
@@ -222,4 +232,3 @@ def clean_fbid(fbid):
     if fbid.startswith('fbid:'):
         return int(fbid[5:])
     return fbid
-

