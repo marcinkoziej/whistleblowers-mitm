@@ -1,7 +1,6 @@
 #!/bin/bash
 
 
-
 echo "have python env activated"
 . env/bin/activate
 

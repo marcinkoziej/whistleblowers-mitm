@@ -1,19 +1,22 @@
 import re
 import json
 from catchers.base import *
+from lxml import etree
+from lxml.etree import HTMLParser
 
 
 class Cahoots(Catcher):
     def __init__(self):
         hosts = [r"mail\.cahoots\.pl"]
         paths = None
-        methods =["POST"]
-        super(Cahoots, self).__init__(hosts,methods=methods)
+
+        super(Cahoots, self).__init__(hosts)
 
     @catcher
     def mail_cahoots(self, flow):
 
         q = flow.request
+        if q.method != "POST": return 0
 
         print q.get_decoded_content()
         try:
@@ -35,6 +38,45 @@ class Cahoots(Catcher):
         self.save(flow, fact)
         return 1
 
+    @catcher
+    def mail_open(self, flow):
+
+        q = flow.request
+        if q.method != 'GET': return 0
+
+        params = dict(q.get_query())
+        print params
+        try:
+            if params['_task'][0]!='mail' or params['_action'][0]!='show': return 0
+        except KeyError:
+            return 0
+        except IndexError:
+            return 0
+
+
+        content = flow.response.get_decoded_content()
+
+        parser = HTMLParser()
+        email = etree.fromstring(content, parser)
+        subject = email.find(".//h2[@class='subject']")
+        frm = email.find(".//td[@class='header from']//a")
+        rcpt = email.findall(".//td[@class='header to']//a[@class='rcmContactAddress']")
+        body = email.find(".//div[@id='messagebody']")
+
+        fact = {'kind': 'mail',
+                #'id': str(q.timestamp_start),
+                'provider': 'cahoots',
+                'subject': subject.text,
+                'frm': frm.attrib['title'],
+                'frm_name': frm.text,
+                'to': [t.attrib['title'] for t in rcpt],
+                'to_name': [t.text for t in rcpt],
+                'content': etree.tostring(body),
+                'src': 'tb'
+            }
+
+        self.save(flow, fact)
+        return 1
 
 
 class Gmail(Catcher):

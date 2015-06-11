@@ -26,8 +26,12 @@ class Catcher(object):
     def db(self):
         return Catcher.mongo.whistleblowers
 
+    ip_re = re.compile( r"^(\d+)\.(\d+)\.(\d+)\.(\d+)$" )
     @staticmethod
     def is_host(req, host):
+        # Skip checks if we deal with IP address, as transarent proxy sometimes does not get ISN in SSL
+        if Catcher.ip_re.match(req.host):
+            return True
         return re.search(host, req.host) != None
 
     @staticmethod
